@@ -173,8 +173,8 @@ module Vico
           sleep 0.25
           puts
           print ' vico> '
-          msg = $stdin.gets.chomp
-          command(msg)
+          msg = $stdin.gets
+          command(msg.chomp) if msg
         end
       rescue => ex
         $stdout.puts ex.message
