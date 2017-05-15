@@ -8,7 +8,13 @@
 
 ## Description
 
-TODO: Description
+so there's a WORLD SERVER which holds references to ZONE SERVERS
+
+client connects to WORLD SERVER, is redirected to relevant ZONE SERVER which hosts the interaction
+
+`bin/vico world` -- start a world server
+`bin/vico zone --address 1234` -- start a zone server, register with world
+`bin/vico text` -- connect to world server via text interface
 
 ## Features
 
