@@ -39,7 +39,7 @@ module Vico
 
     def listen!
       until halted? do
-        fork(accept) do |client|
+        Thread.fork(accept) do |client|
           begin
             $stdout.puts("Accept client: #{client.peeraddr}")
             # parse client command, handoff to responder...
@@ -126,12 +126,12 @@ module Vico
       @host = host
       @port = port
     end
-
-    protected
     def connect!
       puts "---> Client would connect to host #{host}..."
       @socket = TCPSocket.open(@host, @port)
     end
+
+    protected
 
     def command(msg)
       data = { command: msg }.to_bson

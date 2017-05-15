@@ -37,6 +37,7 @@ module Vico
     def text
       puts "---> Launch text interface to world!"
       text_client = Text.new
+      text_client.connect!
       text_client.engage!
     end
 
@@ -44,6 +45,7 @@ module Vico
     def screen
       puts "---> Launch screen interface to world!"
       screen_client = Screen.new
+      screen_client.connect!
       screen_client.engage!
     end
   end
