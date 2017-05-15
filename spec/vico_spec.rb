@@ -27,10 +27,17 @@ end
 
 describe WorldServer do
   subject(:world_server) do
+  # before do
+    # @world_server =
     WorldServer.new(world: world, port: 1234)
   end
 
-  let(:world) { World.new(name: 'hi') }
+  after do
+    # binding.pry
+    world_server.halt!
+  end
+
+  let(:world) { World.new(name: 'boodrox') }
 
   it 'has a world' do
     expect(world_server.world).to eq(world)
@@ -61,6 +68,12 @@ end
 
 describe Text do
   it 'connects to local server by default' do
+    expect(described_class.new.host).to eq('localhost')
+  end
+end
+
+describe Screen do
+  it 'connects to local server' do
     expect(described_class.new.host).to eq('localhost')
   end
 end

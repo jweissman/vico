@@ -2,10 +2,9 @@ source 'https://rubygems.org'
 
 gemspec
 
-# gem 'sinatra'
-# gem 'thin'
 gem 'thor'
 gem 'bson'
+gem 'curses'
 
 group :development do
   gem 'kramdown'

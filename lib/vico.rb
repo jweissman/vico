@@ -2,6 +2,7 @@ require 'vico/version'
 require 'pry'
 require 'socket'
 require 'bson'
+require 'curses'
 
 module Vico
   class World
@@ -25,19 +26,22 @@ module Vico
     end
   end
 
-  # class Protocol
-  #   def self.encode(message)
-  #   end
-
-  #   def self.decode(bytes)
-  #   end
-  # end
-
   class Server < TCPServer
+    def halt!
+      $stdout.puts "===> HALT SERVER <==="
+      @halted = true
+      close
+    end
+
+    def halted?
+      @halted ||= false
+    end
+
     def listen!
-      loop do
-        Thread.fork(accept) do |client|
+      until halted? do
+        fork(accept) do |client|
           begin
+            $stdout.puts("Accept client: #{client.peeraddr}")
             # parse client command, handoff to responder...
             # client.puts "Hello...!"
             handle(client)
@@ -46,6 +50,7 @@ module Vico
           end
         end
       end
+      puts "===> LISTEN DONE"
     end
   end
 
@@ -77,12 +82,12 @@ module Vico
       @world = world
       @port = port
       @controller = Controller.new(world: @world)
-      super(@port)
+      super(@port) rescue $stdout.puts $!
       $stdout.puts "---> WORLD SERVER STARTED"
     end
 
     def handle(client)
-      loop do
+      until halted? do
         if (data = client.gets.chomp)
           begin
             message = parse_message(data)
@@ -95,6 +100,7 @@ module Vico
           end
         end
       end
+      puts "===> HANDLE CLIENT HALTED"
     end
 
     def parse_message(data)
@@ -119,39 +125,54 @@ module Vico
     def initialize(host: 'localhost', port: 7060)
       @host = host
       @port = port
-      puts "---> Client would connect to host #{host}..."
-      @socket = TCPSocket.open(@host, @port)
-      engage!
-    end
-
-    def command(msg)
-      puts "===> SEND COMMAND #{msg}"
-      data = { command: msg }.to_bson
-      @socket.puts(data)
-      puts "===> SENT!"
     end
 
     protected
-    def engage!
-      th = Thread.new do
+    def connect!
+      puts "---> Client would connect to host #{host}..."
+      @socket = TCPSocket.open(@host, @port)
+    end
+
+    def command(msg)
+      data = { command: msg }.to_bson
+      @socket.puts(data)
+    end
+
+    def poll
+      Thread.new do
         loop do
           begin
             if (data = @socket.gets)
-              puts "===> CLIENT READ DATA #{data}"
+              # puts "===> CLIENT READ DATA #{data}"
               bytes = BSON::ByteBuffer.new(data.chomp)
               parsed = Hash.from_bson(bytes)
-              $stdout.puts "received : #{parsed[:description]}"
+              yield(parsed)
             end
           rescue
             $stdout.puts $!
           end
         end
       end
+    end
+  end
+
+  # first client!!
+  class Text < Client
+    def initialize
+      puts "---> Text would connect to local world server..."
+      super
+    end
+
+    def engage!
+      th = poll do |event|
+        $stdout.puts event[:description]
+      end
 
       begin
         loop do
+          sleep 0.25
           puts
-          print ' > '
+          print ' vico> '
           msg = $stdin.gets.chomp
           command(msg)
         end
@@ -166,17 +187,19 @@ module Vico
     end
   end
 
-  # first client!!
-  class Text < Client
-    def initialize
-      puts "---> Text would connect to local world server..."
-      super
-    end
-  end
-
   class Screen < Client
     def initialize
       puts "---> Screen would connect to local world server..."
+      super
+      # engage!
+    end
+
+    def engage!
+      th = poll do |event|
+        $stdout.puts event
+      end
+
+      th.join
     end
   end
 end

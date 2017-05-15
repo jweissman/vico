@@ -36,13 +36,15 @@ module Vico
     desc "text", "connect to world over text interface"
     def text
       puts "---> Launch text interface to world!"
-      Text.new
+      text_client = Text.new
+      text_client.engage!
     end
 
     desc "screen", "connect to world over screen interface"
     def screen
       puts "---> Launch screen interface to world!"
-      Screen.new
+      screen_client = Screen.new
+      screen_client.engage!
     end
   end
 end
