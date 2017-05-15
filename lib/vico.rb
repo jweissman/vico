@@ -1,8 +1,12 @@
-require 'vico/version'
 require 'pry'
 require 'socket'
 require 'bson'
+require 'readline'
 require 'curses'
+
+require 'vico/version'
+require 'vico/client'
+require 'vico/screen'
 
 module Vico
   class World
@@ -119,43 +123,6 @@ module Vico
     end
   end
 
-  class Client
-    attr_reader :host
-
-    def initialize(host: 'localhost', port: 7060)
-      @host = host
-      @port = port
-    end
-    def connect!
-      puts "---> Client would connect to host #{host}..."
-      @socket = TCPSocket.open(@host, @port)
-    end
-
-    protected
-
-    def command(msg)
-      data = { command: msg }.to_bson
-      @socket.puts(data)
-    end
-
-    def poll
-      Thread.new do
-        loop do
-          begin
-            if (data = @socket.gets)
-              # puts "===> CLIENT READ DATA #{data}"
-              bytes = BSON::ByteBuffer.new(data.chomp)
-              parsed = Hash.from_bson(bytes)
-              yield(parsed)
-            end
-          rescue
-            $stdout.puts $!
-          end
-        end
-      end
-    end
-  end
-
   # first client!!
   class Text < Client
     def initialize
@@ -163,18 +130,26 @@ module Vico
       super
     end
 
+    def prompt; "vico> " end
+
     def engage!
       th = poll do |event|
         $stdout.puts event[:description]
       end
 
       begin
-        loop do
-          sleep 0.25
+        while !quit?
+          sleep 0.05
           puts
-          print ' vico> '
-          msg = $stdin.gets
-          command(msg.chomp) if msg
+          msg = Readline.readline(prompt, true)
+          if msg
+            cmd = msg.chomp
+            if cmd == 'quit' or cmd == 'exit'
+              quit!
+            else
+              command(cmd) #msg.chomp)
+            end
+          end
         end
       rescue => ex
         $stdout.puts ex.message
@@ -187,19 +162,4 @@ module Vico
     end
   end
 
-  class Screen < Client
-    def initialize
-      puts "---> Screen would connect to local world server..."
-      super
-      # engage!
-    end
-
-    def engage!
-      th = poll do |event|
-        $stdout.puts event
-      end
-
-      th.join
-    end
-  end
 end
