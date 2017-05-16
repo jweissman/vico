@@ -76,4 +76,7 @@ describe Screen do
   it 'connects to local server' do
     expect(described_class.new.host).to eq('localhost')
   end
+
+  xit 'should display a map' do
+  end
 end

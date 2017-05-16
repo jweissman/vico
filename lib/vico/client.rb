@@ -9,10 +9,17 @@ module Vico
 
     def connect!
       puts "---> Client would connect to host #{host}..."
-      @socket = TCPSocket.open(@host, @port)
+      begin
+        @socket = TCPSocket.open(@host, @port)
+      rescue
+        puts "=== COULD NOT ESTABLISH CONNECTION! ==="
+        puts $!
+        exit(-1)
+      end
     end
 
     def quit!
+      @socket.close
       @comms_thread.kill
       @quit = true
     end
@@ -24,19 +31,22 @@ module Vico
     protected
 
     def command(msg)
-      data = { command: msg }.to_bson
+      raise "Socket not connected!" unless @socket
+      data = JSON.dump command: msg # } #.to_bson
       @socket.puts(data)
     end
 
     def poll
       @comms_thread = Thread.new do
+        raise "Socket not connected!" unless @socket
         until quit? do
           begin
-            if (data = @socket.gets)
-              # puts "===> CLIENT READ DATA #{data}"
-              bytes = BSON::ByteBuffer.new(data.chomp)
-              parsed = Hash.from_bson(bytes)
-              yield(parsed)
+            if (message = Comms.read(socket: @socket)) #data = @socket.gets)
+              # $stdout.puts "===> CLIENT READ DATA #{data}"
+              # bytes = BSON::ByteBuffer.new(data.chomp)
+              # parsed = Hash.from_bson(bytes)
+              # parsed = Comms.decode(data) # JSON.parse(data)
+              yield(message)
             end
           rescue
             $stdout.puts $!

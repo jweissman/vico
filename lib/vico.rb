@@ -1,10 +1,12 @@
 require 'pry'
 require 'socket'
-require 'bson'
+require 'json'
+# require 'bson'
 require 'readline'
 require 'curses'
 
 require 'vico/version'
+require 'vico/comms'
 require 'vico/client'
 require 'vico/screen'
 
@@ -61,20 +63,40 @@ module Vico
   class Controller
     def initialize(world:)
       @world = world
-      # @user = Pawn.new(name: "Someone")
+      @clients = {}
     end
 
-    def look
+    def iam(client, name)
+      @clients[client] = Pawn.new(name: name)
+
+      {
+        hello: name,
+        description: "Welcome to #{@world.name}, #{name}!"
+      }
+    end
+
+    def drop(client) #name)
+      @clients.reject! { |cl, user| user.name == name }
+    end
+
+    def look(client)
       # hmmm, if we enter a zone we need to handoff (proxy)...
       {
-        description: "You are flying over #{@world.name}. You see cities among vast forests. Landmark buildings peek above the canopy.",
-        map: [
-          [ 0, 0, 0, 1, 0, 0, 0 ],
-          [ 0, 1, 1, 1, 1, 0, 0 ],
-          [ 0, 0, 1, 2, 1, 1, 0 ],
-          [ 1, 0, 1, 1, 1, 0, 0 ],
+        description: "You are flying over #{@world.name}. You see cities among vast forests. Landmark buildings peek above the canopy. You see #{@clients.count} people: #{@clients.values.map(&:name).join('; ')}",
+        map: # Array.new(32) { Array.new(32) { Integer(rand * 3) } },
+        [
+          [ 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0 ],
+          [ 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0 ],
+          [ 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0 ],
+          [ 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0 ],
+          [ 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0 ],
+          [ 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0 ],
+          [ 0, 0, 0, 0, 1, 1, 0, 0, 1, 2, 1, 1, 0 ],
+          [ 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 0, 0 ],
+          [ 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0 ],
         ],
-        legend: [ :water, :land, :city ]
+        legend: [ :water, :land, :city ],
+        pawn: { x: 1, y: 1 }
       }
     end
   end
@@ -92,12 +114,15 @@ module Vico
 
     def handle(client)
       until halted? do
-        if (data = client.gets.chomp)
+        if (message = Comms.read(socket: client)) #data = client.gets.chomp)
           begin
-            message = parse_message(data)
-            command = message[:command]
-            response = @controller.public_send(command)
-            client.puts response.to_bson
+            # message = Comms.decode(data) #parse_message(data)
+            $stdout.puts "===> GOT MESSAGE #{message}"
+            command_elements = message[:command].split(' ')
+            command, *args = *command_elements
+            response = @controller.public_send(command, client, *args)
+            Comms.send(response, socket: client)
+            # client.puts(Comms.encode(response)) #.to_bson
           rescue => ex
             $stdout.puts "Encountered exception processing #{message}: " + ex.message
             client.puts( { error: "unknown command #{command}", description: "no such command available #{command}" }.to_bson )
@@ -107,12 +132,13 @@ module Vico
       puts "===> HANDLE CLIENT HALTED"
     end
 
-    def parse_message(data)
-      bytes = BSON::ByteBuffer.new(data)
-      message = Hash.from_bson(bytes)
-      $stdout.puts "---> server parsed: #{message}"
-      return message
-    end
+    # def parse_message(data)
+    #   message = JSON.parse(data)
+    #   # bytes = BSON::ByteBuffer.new(data)
+    #   # message = Hash.from_bson(bytes)
+    #   $stdout.puts "---> server parsed: #{message}"
+    #   return message
+    # end
   end
 
   class ZoneServer
@@ -157,9 +183,8 @@ module Vico
       end
 
       th.join
-    ensure
-      @socket.close
+    # ensure
+    #   @socket.close
     end
   end
-
 end
