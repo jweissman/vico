@@ -46,9 +46,14 @@ module Vico
 
   class Server < TCPServer
     def halt!
-      $stdout.puts "===> HALT SERVER <==="
+      log.info "HALT SERVER!"
+      # $stdout.puts "===> HALT SERVER <==="
       @halted = true
       close
+    end
+
+    def log
+      @logger ||= Logger.new("log/world.log")
     end
 
     def halted?
@@ -56,19 +61,29 @@ module Vico
     end
 
     def listen!
+      log.info "LISTEN"
+      @clients = []
       until halted? do
         Thread.fork(accept) do |client|
           begin
             $stdout.puts("Accept client: #{client.peeraddr}")
+            @clients << client
             # parse client command, handoff to responder...
             # client.puts "Hello...!"
             handle(client)
+          rescue
+            log.error $!
           ensure
+            dropped(client)
             client.close
           end
         end
       end
       puts "===> LISTEN DONE"
+    end
+
+    def dropped(client)
+      # override in subclass
     end
   end
 
@@ -83,11 +98,12 @@ module Vico
       return current_environment(client).merge(description: "Welcome to #{@world.name}, #{name}!")
     end
 
-    # def drop(client) #name)
-    #   @clients.reject! do |cl, user|
-    #     user.name == name
-    #   end
-    # end
+    def drop(the_client) #name)
+      @clients.reject! { |client| client == the_client }
+      # do |cl, user|
+      #   user.name == name
+      # end
+    end
 
     def look(client)
       # hmmm, if we enter a zone we need to handoff (proxy)...
@@ -100,10 +116,10 @@ module Vico
       pawn = @clients[client]
       $stdout.puts "MOVE CLIENT #{pawn.name} IN DIRECTION #{direction}"
       pawn.move!(direction)
-      return current_environment(client)
+      return current_environment(client).merge(description: "You move #{direction}")
     end
 
-    protected
+    # protected
     def current_environment(the_client)
       {
         pawns: @clients.map do |client, pawn|
@@ -134,41 +150,62 @@ module Vico
   class WorldServer < Server
     attr_reader :world, :port
     def initialize(world:, port: 7060)
-      $stdout.puts "---> World server would start..."
+      log.info "---> World server would start..."
       @world = world
       @port = port
       @controller = Controller.new(world: @world)
       super(@port) rescue $stdout.puts $!
-      $stdout.puts "---> WORLD SERVER STARTED"
+      log.info "---> WORLD SERVER STARTED"
+    end
+
+    def client_done?(client)
+      log.info "---> Halted? #{halted?} / Client closed? #{!Comms.test!(socket: client)}"
+      halted? || !(Comms.test!(socket: client)) # || client.closed?
+    end
+
+    def broadcast!
+      @clients.each do |client|
+        log.info "BROADCAST TO CLIENT #{client}"
+        client_env = @controller.current_environment(client)
+        Comms.send(client_env, socket: client)
+      end
+    end
+
+    def process_message(client)
+      log.info "==== ATTEMPT PROCESS MESSSAGE FROM CLIENT"
+      if (message = Comms.read(socket: client))
+        begin
+          log.info "===> GOT MESSAGE #{message}"
+          command_elements = message[:command].split(' ')
+          command, *args = *command_elements
+          response = @controller.public_send(command, client, *args)
+          log.info "===> BUILD RSP #{response}"
+          Comms.send(response, socket: client)
+          broadcast!
+        rescue => ex
+          log.info "Encountered exception processing #{message}: " + ex.message
+          log.info ex.backtrace
+          Comms.send({description: "unable to handle command #{message}"}, socket: client)
+          # client.puts( { error: "unknown command #{command}", description: "no such command available #{command}" }.to_bson )
+        end
+      end
+      # sleep 0.1
     end
 
     def handle(client)
-      until halted? do
-        if (message = Comms.read(socket: client)) #data = client.gets.chomp)
-          begin
-            # message = Comms.decode(data) #parse_message(data)
-            $stdout.puts "===> GOT MESSAGE #{message}"
-            command_elements = message[:command].split(' ')
-            command, *args = *command_elements
-            response = @controller.public_send(command, client, *args)
-            Comms.send(response, socket: client)
-            # client.puts(Comms.encode(response)) #.to_bson
-          rescue => ex
-            $stdout.puts "Encountered exception processing #{message}: " + ex.message
-            client.puts( { error: "unknown command #{command}", description: "no such command available #{command}" }.to_bson )
-          end
-        end
+      log.info "===> HANDLE CLIENT STARTED"
+      until client_done?(client)
+        process_message(client)
       end
-      puts "===> HANDLE CLIENT HALTED"
+      log.info "===> HANDLE CLIENT HALTED"
     end
 
-    # def parse_message(data)
-    #   message = JSON.parse(data)
-    #   # bytes = BSON::ByteBuffer.new(data)
-    #   # message = Hash.from_bson(bytes)
-    #   $stdout.puts "---> server parsed: #{message}"
-    #   return message
-    # end
+    def dropped(client)
+      log.info("CLIENT DROPPED!!!!!")
+      @controller.drop(client)
+      @clients.delete(client)
+      broadcast!
+    end
   end
 
   class ZoneServer

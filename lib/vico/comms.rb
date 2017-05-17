@@ -7,7 +7,8 @@ module Vico
     end
 
     def self.read(socket:)
-      if (data = socket.gets.chomp)
+      if (raw_line = socket.gets) #.chomp)
+        data = raw_line.chomp
         decode data
       end
     end
@@ -19,6 +20,17 @@ module Vico
 
     def self.decode(bytes) # => msg
       JSON.parse(bytes, symbolize_names: true)
+    end
+
+    def self.test!(socket:)
+      begin
+        send({ping: true}, socket: socket)
+        # if read(socket: socket).has_key?(:ping)
+        # socket.puts('')
+        true
+      rescue
+        false
+      end
     end
   end
 end
