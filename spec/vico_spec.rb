@@ -21,7 +21,12 @@ end
 
 describe Pawn do
   it 'has a name' do
-    expect(described_class.new(name: 'bob').name).to eq('bob')
+    expect(described_class.new(name: 'bob', x: nil, y: nil).name).to eq('bob')
+  end
+
+  it 'has a position' do
+    expect(described_class.new(name: '', x: 3, y: 4).x).to eq(3)
+    expect(described_class.new(name: '', x: 3, y: 4).y).to eq(4)
   end
 end
 

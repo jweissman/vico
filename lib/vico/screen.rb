@@ -1,19 +1,8 @@
 require 'logger'
 module Vico
-  module Swearing
-    module Helpers
-    end
+  class Map
+    include Curses
 
-    class Component
-      include Curses
-    end
-
-    class Application
-      include Curses
-    end
-  end
-
-  class Map < Swearing::Component
     attr_reader :legend, :field
 
     def initialize(field:, legend:)
@@ -29,13 +18,30 @@ module Vico
       @field[0].length
     end
 
+    def center_x
+      cols / 2
+    end
+
+    def center_y
+      lines / 2
+    end
+
+    def origin_x
+      center_x - width/2
+    end
+
+    def origin_y
+      center_y - height/2
+    end
+
     def draw
       return unless @field
       # draw_centered(figure: field_map)_
-      cx = cols / 2  # We will center our text
-      cy = lines / 2
+      # cx = cols / 2  # We will center our text
+      # cy = lines / 2
 
-      y0, x0 = cy - height/2, cx - width/2
+      x0, y0 = origin_x, origin_y
+      # y0, x0 = cy - height/2, cx - width/2
 
       (0..width-1).each do |x|
         (0..height-1).each do |y|
@@ -58,6 +64,31 @@ module Vico
     end
   end
 
+  class Player
+    include Curses
+    attr_accessor :x, :y, :name
+    def initialize(name:, x:, y:, you:)
+      @name = name
+      @x, @y = x, y
+      @you = you
+    end
+
+    def draw(map:)
+      x0 = x + map.origin_x
+      y0 = y + map.origin_y
+
+      setpos(y0, x0)
+      addstr figure
+
+      setpos(y0 + 1, x0 - name.length/2) #, y+1)
+      addstr name
+    end
+
+    def figure
+      @you ? '@' : '^'
+    end
+  end
+
   class Screen < Client
     include Curses
 
@@ -65,18 +96,34 @@ module Vico
       poll do |event|
         # log.info "GOT EVENT: #{event}"
         # $stdout.puts event
-        if event[:map]
+        if event[:map] # update map...
           @map = Map.new(field: event[:map], legend: event[:legend])
           # puts "---> GOT MAP #{@map.legend}"
           # puts "---> GOT MAP #{@map.field}"
           #$stdout.puts "===> GOT MAP: #{event['map']}"
         end
+
+        if event[:pawns] # update pawn locations...
+          log.info "UPDATE players: #{event[:pawns]}"
+          @players = event[:pawns].map do |*attrs| #name:, x:, y:, you:|
+            Player.new(*attrs) #name: name, x: x, y: y, you: you)
+          end
+          # x = event[:pawn][:x]
+          # y = event[:pawn][:y]
+          # name = event[:pawn][:name]
+          # @player = Player.new(name: name, x: x, y: y)
+        end
+
+        if event[:world] # update world info
+          log.info "UPDATE world"
+          @world = World.new(name: event[:world][:name])
+        end
       end
 
       puts
       print " what's your name? "
-      name = $stdin.gets.chomp
-      command "iam #{name}"
+      @name = $stdin.gets.chomp
+      command "iam #@name"
 
       command "look"
 
@@ -129,10 +176,10 @@ module Vico
     def wait_for_keypress
       case getch
       when 'x', 'q' then quit!
-      when 'h' then log.info 'east'
-      when 'k' then log.info 'north'
-      when 'j' then log.info 'south'
-      when 'l' then log.info 'west'
+      when 'h' then command 'go east'
+      when 'k' then command 'go north'
+      when 'j' then command 'go south'
+      when 'l' then command 'go west'
       end
     end
 
@@ -142,6 +189,15 @@ module Vico
       if @map
         # log.info "DRAW MAP"
         @map.draw
+        if @players
+          @players.each do |player|
+            player.draw(map: @map)
+          end
+        end
+        if @world
+          setpos(0,0)
+          addstr("WORLD: #{@world.name}")
+        end
       else
         x = cols / 2  # We will center our text
         y = lines / 2

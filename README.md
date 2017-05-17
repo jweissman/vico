@@ -1,17 +1,17 @@
-# VICO (VOLUMINOUS INFORMATION CITY OMNIVERSE)
+# vico
 
 * [Homepage](https://rubygems.org/gems/vico)
 * [Documentation](http://rubydoc.info/gems/vico/frames)
 * [Email](mailto:jweissman1986 at gmail.com)
 
-[![Code Climate GPA](https://codeclimate.com/github//vico/badges/gpa.svg)](https://codeclimate.com/github//vico)
+[![Code Climate GPA](https://codeclimate.com/github/jweissman/vico/badges/gpa.svg)](https://codeclimate.com/github/jweissman/vico)
+
 
 > "The criterion and rule of the true is to have made it. Accordingly, our clear and distinct idea of the mind cannot be a criterion of the mind itself, still less of other truths. For while the mind perceives itself, it does not make itself." --Giambattista Vico
 
-
 ## PROTOCOL
 
-VICO (the VOLUMINOUS INFORMATION CITY OMNIVERSE) responds to a text-based PROTOCOL composed of simple COMMANDS which trigger EVENTS
+VICO (the VOLUMINOUS INFORMATION CITY OMNIVERSE) responds to a text-based PROTOCOL composed of simple textual COMMANDS which trigger EVENTS.
 
 ### COMMANDS
 
@@ -19,25 +19,37 @@ VICO (the VOLUMINOUS INFORMATION CITY OMNIVERSE) responds to a text-based PROTOC
 
 **iam [name]** — assign this client a USERNAME
 
+**go [north/south/east/west]** -- move client in direction
+
+
 ### EVENTS
 
 *SURROUNDINGS* — provide an [updated/current] local map
-
-*USERNAME* — indicates a player has changed their name
-
 
 ## Description
 
 The architecture involves a WORLD SERVER which holds references to ZONE SERVERS.
 
-Client connects to WORLD SERVER, and is flying above the world. They are "redirected" to relevant ZONE SERVER which supports the 'local' interaction.
+Client connects to WORLD SERVER, and is flying above the world. When landing, they are directed to registered ZONE SERVER which supports the local interaction.
 
 `vico world` -- start a world server
+
 `vico zone` -- start a zone server, register with world
+
 `vico text` -- connect to world server via line-mode interface
+
 `vico screen` -- connect to world server via screen interface (see requirements)
 
+(`vico universe` might run a registry of worlds.)
+
 ## Features
+
+  - [ ] Movement commands ('immanent' mode)
+    - [ ] Flying (over world)
+    - [ ] Walking (around zone)
+    - [ ] Driving (between zones...?)
+  - [ ] Hail taxi
+  - [ ] Summon guide
 
 ## Requirements
 

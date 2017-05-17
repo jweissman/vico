@@ -26,9 +26,21 @@ module Vico
   end
 
   class Pawn
-    attr_reader :name
-    def initialize(name:)
+    attr_reader :name, :x, :y
+    def initialize(name:, x:, y:)
       @name = name
+      @x = x
+      @y = y
+    end
+
+    def move!(direction)
+      case direction
+      when 'north' then @y -= 1
+      when 'south' then @y += 1
+      when 'east'  then @x -= 1
+      when 'west'  then @x += 1
+      else puts "UNKNOWN DIRECTION #{direction}"
+      end
     end
   end
 
@@ -67,36 +79,54 @@ module Vico
     end
 
     def iam(client, name)
-      @clients[client] = Pawn.new(name: name)
-
-      {
-        hello: name,
-        description: "Welcome to #{@world.name}, #{name}!"
-      }
+      @clients[client] = Pawn.new(name: name, x: 10, y: 10)
+      return current_environment(client).merge(description: "Welcome to #{@world.name}, #{name}!")
     end
 
-    def drop(client) #name)
-      @clients.reject! { |cl, user| user.name == name }
-    end
+    # def drop(client) #name)
+    #   @clients.reject! do |cl, user|
+    #     user.name == name
+    #   end
+    # end
 
     def look(client)
       # hmmm, if we enter a zone we need to handoff (proxy)...
+      # pawn = @clients[client]
+      message = "You see cities among vast forests. Landmark buildings peek above the canopy. You see #{@clients.count} others (#{@clients.values.map(&:name).join('; ')})"
+      return current_environment(client).merge(description: message)
+    end
+
+    def go(client, direction)
+      pawn = @clients[client]
+      $stdout.puts "MOVE CLIENT #{pawn.name} IN DIRECTION #{direction}"
+      pawn.move!(direction)
+      return current_environment(client)
+    end
+
+    protected
+    def current_environment(the_client)
       {
-        description: "You are flying over #{@world.name}. You see cities among vast forests. Landmark buildings peek above the canopy. You see #{@clients.count} people: #{@clients.values.map(&:name).join('; ')}",
-        map: # Array.new(32) { Array.new(32) { Integer(rand * 3) } },
-        [
+        pawns: @clients.map do |client, pawn|
+          { name: pawn.name, you: (client == the_client), x: pawn.x, y: pawn.y }
+        end,
+        map: [
           [ 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0 ],
           [ 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0 ],
-          [ 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0 ],
-          [ 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0 ],
+          [ 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 0, 0 ],
           [ 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0 ],
+          [ 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0 ],
           [ 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0 ],
           [ 0, 0, 0, 0, 1, 1, 0, 0, 1, 2, 1, 1, 0 ],
           [ 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 0, 0 ],
           [ 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0 ],
+          [ 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0 ],
+          [ 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0 ],
+          [ 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0 ],
+          [ 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0 ],
+          [ 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0 ],
         ],
         legend: [ :water, :land, :city ],
-        pawn: { x: 1, y: 1 }
+        world: { name: @world.name }
       }
     end
   end
