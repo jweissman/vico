@@ -42,13 +42,10 @@ end
 
 describe WorldServer do
   subject(:world_server) do
-  # before do
-    # @world_server =
     WorldServer.new(world: world, port: 1234)
   end
 
   after do
-    # binding.pry
     world_server.halt!
   end
 
@@ -92,6 +89,11 @@ describe Screen do
     expect(described_class.new.host).to eq('localhost')
   end
 
-  xit 'should display a map' do
+  it 'should display a map' do
+    screen = described_class.new
+    fake_map = instance_double(Vico::Map)
+    screen.map = fake_map
+    expect(fake_map).to receive(:draw)
+    screen.draw
   end
 end

@@ -96,6 +96,8 @@ module Vico
   class Screen < Client
     include Curses
 
+    attr_accessor :map
+
     def engage!
       poll do |event|
         if event[:map] # update map...
