@@ -7,6 +7,16 @@ describe Vico do
   end
 end
 
+describe WorldMap do
+  it 'has width and height' do
+    expect(described_class.new(width: 10, height: 15).height).to eq(15)
+    expect(described_class.new(width: 10, height: 15).width).to eq(10)
+    expect(described_class.new(width: 10, height: 15).field.length).to eq(15)
+    expect(described_class.new(width: 10, height: 15).field[0].length).to eq(10)
+    expect(described_class.new(width: 10, height: 15).area).to eq(150)
+  end
+end
+
 describe World do
   it 'has a name' do
     expect(described_class.new(name: 'hello world').name).to eq('hello world')

@@ -36,22 +36,26 @@ module Vico
 
     def draw
       return unless @field
-      # draw_centered(figure: field_map)_
-      # cx = cols / 2  # We will center our text
-      # cy = lines / 2
-
+      setpos(1,0)
+      addstr("MAP SIZE: #{width}x#{height}")
       x0, y0 = origin_x, origin_y
-      # y0, x0 = cy - height/2, cx - width/2
-
       (0..width-1).each do |x|
         (0..height-1).each do |y|
-          figure = figure_for(@field[y][x])
+          figure = figure_at(x,y)
           ax,ay = x + x0, y + y0
           setpos(ay,ax)
           addstr(figure)
         end
       end
       refresh
+    end
+
+    def figure_at(x,y)
+      figure_for(value_at(x,y))
+    end
+
+    def value_at(x,y)
+      @field[y][x]
     end
 
     def figure_for(value)
@@ -94,24 +98,15 @@ module Vico
 
     def engage!
       poll do |event|
-        # log.info "GOT EVENT: #{event}"
-        # $stdout.puts event
         if event[:map] # update map...
           @map = Map.new(field: event[:map], legend: event[:legend])
-          # puts "---> GOT MAP #{@map.legend}"
-          # puts "---> GOT MAP #{@map.field}"
-          #$stdout.puts "===> GOT MAP: #{event['map']}"
         end
 
         if event[:pawns] # update pawn locations...
           log.info "UPDATE players: #{event[:pawns]}"
-          @players = event[:pawns].map do |*attrs| #name:, x:, y:, you:|
-            Player.new(*attrs) #name: name, x: x, y: y, you: you)
+          @players = event[:pawns].map do |*attrs|
+            Player.new(*attrs)
           end
-          # x = event[:pawn][:x]
-          # y = event[:pawn][:y]
-          # name = event[:pawn][:name]
-          # @player = Player.new(name: name, x: x, y: y)
         end
 
         if event[:world] # update world info
@@ -161,6 +156,7 @@ module Vico
     def launch_ui!
       Thread.new do
         begin
+          noecho
           init_screen
           wait_for_keypress until quit?
           # nb_lines = lines
