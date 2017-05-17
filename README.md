@@ -44,10 +44,31 @@ Client connects to WORLD SERVER, and is flying above the world. When landing, th
 
 ## Features
 
-  - [ ] Movement commands ('immanent' mode)
-    - [ ] Flying (over world)
-    - [ ] Walking (around zone)
-    - [ ] Driving (between zones...?)
+  - [~] World server
+    - [~] Protocol
+      - [x] View surroundings
+      - [x] Names
+      - [~] Movement
+        - [x] Flying
+        - [ ] Landing
+        - [ ] Walking
+        - [ ] Driving
+    - [ ] Registry for zone servers
+  - [~] Line-mode interface
+    - [~] Movement
+      - [x] Flying (over world)
+      - [ ] Landing (into zone)
+      - [ ] Walking (around zone)
+      - [ ] Driving (between zones...?)
+  - [~] Screen-mode interface
+    - [~] Movement
+      - [x] Flying
+      - [ ] Landing
+      - [ ] Walking
+      - [ ] Driving
+    - [ ] Modes
+      - [ ] Command mode
+      - [ ] Visual mode (select area)
   - [ ] Hail taxi
   - [ ] Summon guide
 

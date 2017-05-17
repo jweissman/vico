@@ -44,7 +44,7 @@ module Vico
     desc "screen", "connect to world over screen interface"
     def screen
       puts "---> Launch screen interface to world!"
-      screen_client = Screen.new
+      screen_client = Screen::VisualClient.new
       screen_client.connect!
       screen_client.engage!
     end

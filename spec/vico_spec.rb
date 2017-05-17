@@ -82,16 +82,20 @@ describe Text do
   it 'connects to local server by default' do
     expect(described_class.new.host).to eq('localhost')
   end
+
+  # it 'can enter a city' do
+  #   text_client = described_class.new
+  # end
 end
 
-describe Screen do
+describe Screen::VisualClient do
   it 'connects to local server' do
     expect(described_class.new.host).to eq('localhost')
   end
 
   it 'should display a map' do
     screen = described_class.new
-    fake_map = instance_double(Vico::Map)
+    fake_map = instance_double(Vico::Screen::Map)
     screen.map = fake_map
     expect(fake_map).to receive(:draw)
     screen.draw
