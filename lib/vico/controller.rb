@@ -59,6 +59,10 @@ module Vico
             # but we need the paper trail (how they GOT here) to be able to get back out (if ambig...)
           end
           # land wherever the client is, if flying...
+        elsif (matching_landmark = @subspaces.detect { |it| it[:name] == direction })
+          location = matching_landmark[:location]
+          pawn.set_pos(*location)
+          return { description: "You move to #{matching_landmark[:name]} at #{location}" }
         else
           raise "Unknown direction to move: '#{direction}'! (Should be north/south/east/west/up/down)"
         end

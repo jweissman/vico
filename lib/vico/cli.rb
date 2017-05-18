@@ -45,7 +45,7 @@ module Vico
     def text
       puts "---> Launch text interface to world!"
       text_client = Text.new
-      text_client.connect!
+      # text_client.connect!
       text_client.engage!
     end
 
