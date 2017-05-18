@@ -34,6 +34,11 @@ module Vico
         center_y - height/2
       end
 
+      def describe(x,y)
+        # "unknown???"
+        description_for(value_at(x,y))
+      end
+
       def draw
         return unless @field
         setpos(1,0)
@@ -59,12 +64,24 @@ module Vico
       end
 
       def figure_for(value)
+        return '?' unless @legend[value]
         case @legend[value].to_sym
         when :water then '~'
         when :land then '='
-        when :city then '*'
-        else '?'
+        # when :city then '*'
+        else '*'
         end
+      end
+
+      def description_for(value)
+        return '???' unless @legend[value]
+        @legend[value].capitalize
+        # case @legend[value].to_sym
+        # when :water then 'water'
+        # when :land then '='
+        # # when :city then '*'
+        # else '*'
+        # end
       end
     end
   end

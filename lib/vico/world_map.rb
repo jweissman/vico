@@ -11,6 +11,24 @@ module Vico
       @width * @height
     end
 
+    def field_with_landmarks(landmarks: [])
+      begin
+        augmented_field = @field.clone
+        landmarks.each do |landmark|
+          x,y = *landmark[:location]
+          augmented_field[y][x] = landmark[:id]
+          # $stdout.puts "---> Placed #{landmark[:name]} (#{landmark[:id]}) at #{x}, #{y}"
+        end
+        augmented_field
+      rescue
+        $stdout.puts $!
+      end
+    end
+
+    def legend(landmarks: [])
+      [ :water, :land ] + landmarks.map { |lm| lm[:name] } #(&:name)
+    end
+
     def self.generate_field(w,h)
       field = Array.new(h) do
         Array.new(w) do
@@ -44,5 +62,4 @@ module Vico
       (total / count).to_i
     end
   end
-
 end

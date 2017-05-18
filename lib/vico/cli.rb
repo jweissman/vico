@@ -20,15 +20,23 @@ module Vico
     def world(name=Name.generate!)
       puts "SERVE WORLD #{name}"
       world = World.new(name: name)
-      server = WorldServer.new(world: world)
+      server = Server.new(space: world)
       server.listen!
     end
 
-    desc "zone ADDRESS", "start zone with ADDRESS"
-    def zone(address)
-      puts "SERVE ZONE #{address}"
-      ZoneServer.new(address: adress)
+    desc "city NAME", "start city NAME"
+    def city(name='hotlanta')
+      puts "SERVE CITY #{name}"
+      city = City.new(name: name)
+      server = Server.new(space: city, register: true, port: 7070)
+      server.listen!
     end
+
+    # desc "zone ADDRESS", "start zone with ADDRESS"
+    # def zone(address)
+    #   puts "SERVE ZONE #{address}"
+    #   ZoneServer.new(address: adress)
+    # end
 
     # plaintext, line-oriented
     # console/cli/os
@@ -44,8 +52,8 @@ module Vico
     desc "screen", "connect to world over screen interface"
     def screen
       puts "---> Launch screen interface to world!"
-      screen_client = Screen::VisualClient.new
-      screen_client.connect!
+      screen_client = Screen::Engine.new
+      # screen_client.connect!
       screen_client.engage!
     end
   end

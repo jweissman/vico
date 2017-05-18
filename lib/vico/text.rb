@@ -23,7 +23,7 @@ module Vico
             if cmd == 'quit' or cmd == 'exit'
               quit!
             else
-              command(cmd) #msg.chomp)
+              command(cmd)
             end
           end
         end

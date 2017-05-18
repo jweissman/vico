@@ -1,6 +1,6 @@
 module Vico
   class Client
-    attr_reader :host
+    attr_reader :host, :port, :comms_thread
 
     def initialize(host: 'localhost', port: 7060)
       @host = host
@@ -27,8 +27,6 @@ module Vico
     def quit?
       @quit ||= false
     end
-
-    protected
 
     def command(msg)
       raise "Socket not connected!" unless @socket
