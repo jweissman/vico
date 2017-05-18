@@ -4,57 +4,53 @@ module Vico
       include Curses
       attr_accessor :map
 
-      def engage!
-        poll do |event|
-          begin
-            if event[:map] && event[:legend] # update map...
-              @map = Map.new(field: event[:map], legend: event[:legend])
-            end
+      def listen(event)
+        if event[:map] && event[:legend] # update map...
+          @map = Map.new(field: event[:map], legend: event[:legend])
+        end
 
-            if event[:pawns] # update pawn locations...
-              log.info "UPDATE players: #{event[:pawns]}"
-              @players = event[:pawns].map do |*attrs|
-                Player.new(*attrs)
-              end
-            end
-
-            if event[:world] # update world info
-              log.info "UPDATE world / space"
-              @space = Space.new(name: event[:world][:name])
-            end
-          rescue
-            $stdout.puts $!
-            log.error "encountered exception handling event #{event}"
-            log.error $!
+        if event[:pawns] # update pawn locations...
+          log.info "UPDATE players: #{event[:pawns]}"
+          @players = event[:pawns].map do |*attrs|
+            Player.new(*attrs)
           end
         end
+
+        if event[:world] # update world info
+          log.info "UPDATE world / space"
+          @space = Space.new(name: event[:world][:name])
+        end
+      rescue
+        $stdout.puts $!
+        log.error "encountered exception handling event #{event}"
+        log.error $!
+      end
+
+      def engage!
+        poll(&method(:listen))
 
         # puts
         # print " what's your name? "
         # @name = 'guest' # $stdin.gets.chomp
         command "iam guest#{(rand*1_000).to_i}" ##@name"
-
         command "look"
 
         @ui_thread = launch_ui!
+        @refresh_thread = Thread.new { refresh_loop }
+        log.info "starting threads..."
+        [  @refresh_thread, @comms_thread, @ui_thread ].map(&:join)
+      end
 
-        # refresh proces...
-        @refresh_thread = Thread.new do
-          until quit?
-            begin
-              sleep 0.15
-              tick; draw # and draw
-              refresh
-            rescue
-              log.error $!
-            end
+      def refresh_loop
+        until quit?
+          begin
+            sleep 0.15
+            tick; draw # and draw
+            refresh
+          rescue
+            log.error $!
           end
         end
-
-        # @pawn = Pawn.new(name: "Bob")
-
-        # log.info "starting threads..."
-        [  @refresh_thread, @comms_thread, @ui_thread ].map(&:join)
       end
 
       def log
