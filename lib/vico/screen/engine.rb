@@ -10,13 +10,15 @@ module Vico
       end
 
       def quit!
+        log.info "QUITTTTT"
         $client.quit!
         [ @refresh_thread, @ui_thread ].map(&:kill)
         @quit = true
       end
 
       def quit?
-        $client.quit? || (@quit ||= false)
+        @quit ||= false
+        # $client.quit? || (@quit ||= false)
         # @quit ||= ($client.quit? || false)
       end
 
@@ -33,9 +35,9 @@ module Vico
           end
         end
 
-        if event[:world] # update world info
-          log.info "UPDATE world / space -- name: #{event[:world][:name]}"
-          @space = Space.new(name: event[:world][:name])
+        if event[:space] # update world info
+          log.info "UPDATE world / space -- name: #{event[:space][:name]}"
+          @space = Space.new(name: event[:space][:name])
         end
 
         if event[:description]
@@ -52,7 +54,11 @@ module Vico
             # redirect to new host/port.............
             host, port = event[:host], event[:port] #.fetch_all(:host, :port)
             log.info "REDIRECT CLIENT TO #{host}:#{port}"
+            $client.command('drop')
+            # $client.comms_thread.kill #quit! # kill threads?
             @visited.push({host: host, port: port})
+            sleep 0.2
+            # $client.quit!
             $client = Vico::Client.new(host: host, port: port)
             #event[:host], port: event[:port])
             connect_client!
@@ -68,11 +74,7 @@ module Vico
       def connect_client!
         $client.connect!
         $client.poll(&method(:listen))
-
-        # puts
-        # print " what's your name? "
-        # @name = 'guest' # $stdin.gets.chomp
-        $client.command "iam #{user_id}" ##@name"
+        $client.command "iam #{user_id}"
         $client.command "look"
 
         # need to join comms thread....
@@ -83,19 +85,11 @@ module Vico
       end
 
       def engage!
-        # $client.poll(&method(:listen))
         connect_client!
-
-        # # puts
-        # # print " what's your name? "
-        # # @name = 'guest' # $stdin.gets.chomp
-        # $client.command "iam guest#{(rand*1_000).to_i}" ##@name"
-        # $client.command "look"
-
         @ui_thread = launch_ui!
         @refresh_thread = Thread.new { refresh_loop }
         log.info "starting threads..."
-        [  @refresh_thread, $client.comms_thread, @ui_thread ].map(&:join)
+        [  @refresh_thread, @ui_thread ].map(&:join)
       end
 
       def refresh_loop
@@ -119,23 +113,18 @@ module Vico
             noecho
             init_screen
             wait_for_keypress until quit?
-            # nb_lines = lines
-            # nb_cols = cols
-            # draw until quit?
           rescue
             log.error $!
           ensure
             close_screen
           end
         end
-        # $stdout.puts "--- ui launched..."
       end
 
       def wait_for_keypress
         log.info "WAIT FOR KEYPRESS!!!!"
         case getch
         when 'x', 'q' then quit!
-          # oh no it's not threadsafe :/
         when 'h' then $client.command 'go east'
         when 'k' then $client.command 'go north'
         when 'j' then $client.command 'go south'

@@ -34,7 +34,12 @@ module Vico
         center_y - height/2
       end
 
+      def on_map?(x,y)
+        x >= 0 && x < width && y >= 0 && y < height
+      end
+
       def describe(x,y)
+        return "Void" unless on_map?(x,y)
         # "unknown???"
         description_for(value_at(x,y))
       end

@@ -16,7 +16,7 @@ module Vico
     def drop(the_client) #name)
       @clients.reject! { |client, pawn| client == the_client }
       @subspaces.reject! { |subspace| subspace[:connection] == the_client }
-      true
+      false
       # do |cl, user|
       #   user.name == name
       # end
