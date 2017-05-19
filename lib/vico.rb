@@ -17,7 +17,7 @@ require 'vico/screen'
 
 ## server deps
 
-require 'vico/world_map'
+require 'vico/space_map'
 require 'vico/server_helpers'
 require 'vico/controller'
 require 'vico/server'
@@ -26,29 +26,37 @@ require 'vico/server'
 ## models (server-only)
 
 module Vico
-  class World
+  class Space
     attr_reader :name, :map
-    def initialize(name:)
+    def initialize(name:, width: 10, height: 10)
       @name = name
-      @map = WorldMap.new(width: 40, height: 10)
-      # @cities = []
+      @map = SpaceMap.new(width: width, height: height)
     end
   end
 
-  class City
-    attr_reader :name, :map
-    def initialize(name:)
-      @name = name
-      @map = WorldMap.new(width: 15, height: 15)
-    end
+  class World < Space
+    # attr_reader :name, :map
+    # def initialize(name:)
+    #   @name = name
+    #   @map = WorldMap.new(width: 40, height: 10)
+    #   # @cities = []
+    # end
   end
 
-  # class Zone
-  #   attr_reader :address
-  #   def initialize(address:)
-  #     @address = address
-  #   end
-  # end
+  class City < Space
+    # attr_reader :name, :map
+    # def initialize(name:)
+    #   @name = name
+    #   @map = WorldMap.new(width: 15, height: 15)
+    # end
+  end
+
+  class Zone
+    attr_reader :address
+    def initialize(address:)
+      @address = address
+    end
+  end
 
   class Pawn
     attr_reader :name, :x, :y

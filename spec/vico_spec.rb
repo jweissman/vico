@@ -7,7 +7,7 @@ require 'vico'
 #   end
 # end
 
-describe WorldMap do
+describe SpaceMap do
   it 'has width and height' do
     expect(described_class.new(width: 10, height: 15).height).to eq(15)
     expect(described_class.new(width: 10, height: 15).width).to eq(10)

@@ -18,12 +18,21 @@ VICO (the VOLUMINOUS INFORMATION CITY OMNIVERSE) responds to a text-based PROTOC
 
 **iam [name]** — assign this client a USERNAME
 
-**go [north/south/east/west/down]** -- move client in direction
+**go [north/south/east/west/down]** -- move client in direction (going 'down' into SUBSPACES may trigger a REDIRECTION event)
 
+**drop** -- remove this client (no response will be sent) -- clients MUST send this
+
+---
+
+**register [city/block/zone] [name] [host] [port] [x-position] [y-position]** -- register this connection as a SUBSPACE of the target space, embedded at (x-position, y-position) in the target spaces map (this can be done recursively to build
+
+**ping/pong** - a heartbeat check
 
 ### EVENTS
 
-*SURROUNDINGS* — provide an [updated/current] local map
+*SURROUNDINGS* — provide an [updated/current] local state for a given client -- this message is intended to be recieved by a particular client -- it has a list of visible PAWNs (with names, locations and a flag indicating whether it is the user -- `you` or not), a MAP and LEGEND, and metadata about the current SPACE (name)
+
+*REDIRECTED* -- indicate the new server host and port to which the client should now address itself -- before redirecting itself clients may wish to keep a stack of visited servers to be able to implement an 'up' operation (pop the stack and direct back to the last server visited)
 
 ## Description
 

@@ -2,6 +2,8 @@ module Vico
   class Controller
     def initialize(space:)
       @space = space
+
+      # we have to differentiate better between clients/subspaces
       @clients = {}
       @subspaces = []
     end
@@ -11,6 +13,10 @@ module Vico
     def iam(client, name)
       @clients[client] = Pawn.new(name: name, x: 10, y: 10)
       return current_environment(client).merge(description: "Welcome to #{@space.name}, #{name}!")
+    end
+
+    def ping(client)
+      { description: "pong, #{@clients[client].name}" }
     end
 
     def drop(the_client) #name)
@@ -24,7 +30,10 @@ module Vico
 
     def look(client)
       # hmmm, if we enter a zone we need to handoff (proxy)...
-      message = "You are flying over the space." # You see cities among vast forests. Landmark buildings peek above the canopy.
+      message = "You are flying over #{@space.name}." # You see cities among vast forests. Landmark buildings peek above the canopy.
+
+      # the space itself has got to tell us more
+      # message += "Landmarks peek above the canopy"
 
       if @subspaces.any?
         message += "You see cities among vast forests: #{@subspaces.map { |sp| sp[:name] }.join(', ')}."
@@ -64,7 +73,7 @@ module Vico
           pawn.set_pos(*location)
           return { description: "You move to #{matching_landmark[:name]} at #{location}" }
         else
-          raise "Unknown direction to move: '#{direction}'! (Should be north/south/east/west/up/down)"
+          raise "Unknown direction to move: '#{direction}'! (Should be north/south/east/west/down)"
         end
       end
     end
@@ -82,7 +91,7 @@ module Vico
         connection: client,
         active_clients: []
       }
-      true
+      false
     end
 
     # protected

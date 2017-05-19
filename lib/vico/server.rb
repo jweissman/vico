@@ -29,9 +29,11 @@ module Vico
     end
 
     def broadcast!
+      log.info "BROADCAST UPDATE"
       @clients.each do |client|
-        log.info "BROADCAST TO CLIENT #{client}"
+        # log.info "BROADCAST TO CLIENT #{client}"
         client_env = @controller.current_environment(client)
+        log.info "BROADCAST: #{client_env}"
         Comms.send(client_env, socket: client)
       end
     end

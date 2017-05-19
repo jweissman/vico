@@ -1,5 +1,5 @@
 module Vico
-  class WorldMap
+  class SpaceMap
     attr_reader :width, :height, :field
     def initialize(width:, height:)
       @width = width
