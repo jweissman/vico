@@ -9,11 +9,16 @@ require 'vico'
 
 describe SpaceMap do
   it 'has width and height' do
-    expect(described_class.new(width: 10, height: 15).height).to eq(15)
-    expect(described_class.new(width: 10, height: 15).width).to eq(10)
-    expect(described_class.new(width: 10, height: 15).field.length).to eq(15)
-    expect(described_class.new(width: 10, height: 15).field[0].length).to eq(10)
-    expect(described_class.new(width: 10, height: 15).area).to eq(150)
+    map = described_class.new(width: 10, height: 15)
+    expect(map.height).to eq(15)
+    expect(map.width).to eq(10)
+
+    map.generate!
+    expect(map.field).not_to be_nil
+    expect(map.field).not_to be_empty
+    expect(map.field.length).to eq(15)
+    expect(map.field[0].length).to eq(10)
+    expect(map.area).to eq(150)
   end
 end
 
@@ -64,9 +69,9 @@ end
 #   subject(:zone_server) do
 #     ZoneServer.new(address: address)
 #   end
-# 
+#
 #   let(:address) { '1234 main st' }
-# 
+#
 #   it 'has a world' do
 #     expect(zone_server.address).to eq(address)
 #   end

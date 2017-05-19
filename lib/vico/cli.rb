@@ -17,17 +17,42 @@ module Vico
     end
 
     desc "world NAME", "start world NAME"
-    def world(name=Name.generate!)
+    def world(name='omnia')
       puts "SERVE WORLD #{name}"
-      world = World.new(name: name)
+
+      # TODO same check for city...
+      if World.where(name: name).any?
+        world = World.where(name: name).first
+      else
+        world = World.new(name: name)
+        world.save
+        map = SpaceMap.new(width: 50, height: 20) #, space: world)
+        map.generate!
+        map.save
+        world.space_map = map
+        map.save
+      end
+
+      # binding.pry
+
       server = Server.new(space: world)
       server.listen!
     end
 
     desc "city NAME", "start city NAME"
-    def city(name='hotlanta')
+    def city(name='aeternitas')
       puts "SERVE CITY #{name}"
-      city = City.new(name: name)
+      if City.where(name: name).any?
+        city = City.where(name: name).first
+      else
+        city = City.new(name: name)
+        city.save
+        map = SpaceMap.new(width: 120, height: 80)
+        map.generate!
+        map.save
+        city.space_map = map
+        map.save
+      end
       server = Server.new(space: city, register: true, port: 7070)
       server.listen!
     end

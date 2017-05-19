@@ -1,19 +1,32 @@
 module Vico
-  class SpaceMap
-    attr_reader :width, :height, :field
-    def initialize(width:, height:)
-      @width = width
-      @height = height
-      @field = self.class.generate_field(width, height)
+  # this needs to be a model...
+  class SpaceMap < Sequel::Model(:space_map)
+    # attr_reader :width, :height, :field
+    one_to_one :space
+
+    # deserialize field data
+    def field
+      field_data_elements = self.field_data.lit.to_s.split('').map(&:to_i)
+      # parse field data
+      Array.new(height) do
+        Array.new(width) do
+          field_data_elements.pop
+        end
+      end
+    end
+
+    # serialize field -> field data blob
+    def field=(updated_field)
+      self.field_data = updated_field.flatten.join
     end
 
     def area
-      @width * @height
+      width * height
     end
 
     def field_with_landmarks(landmarks: [])
       begin
-        augmented_field = @field.clone
+        augmented_field = field #.clone
         landmarks.each do |landmark|
           x,y = *landmark[:location]
           augmented_field[y][x] = landmark[:id]
@@ -28,6 +41,12 @@ module Vico
     def legend(landmarks: [])
       [ :water, :land ] + landmarks.map { |lm| lm[:name] } #(&:name)
     end
+
+    def generate!
+      self.field_data = self.class.generate_field(width, height).flatten.join
+      # save
+    end
+
 
     def self.generate_field(w,h)
       field = Array.new(h) do

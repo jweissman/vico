@@ -100,8 +100,8 @@ module Vico
         pawns: @clients.map do |client, pawn|
           { name: pawn.name, you: (client == the_client), x: pawn.x, y: pawn.y }
         end,
-        map: @space.map.field_with_landmarks(landmarks: @subspaces),
-        legend: @space.map.legend(landmarks: @subspaces), # [ :water, :land, :city ],
+        map: @space.space_map.field_with_landmarks(landmarks: @subspaces),
+        legend: @space.space_map.legend(landmarks: @subspaces), # [ :water, :land, :city ],
         space: { name: @space.name }
       }
     end

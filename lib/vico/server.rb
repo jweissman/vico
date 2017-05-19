@@ -8,6 +8,8 @@ module Vico
       @space = space
       @port = port
       @controller = Controller.new(space: @space)
+      # @db = Sequel.sqlite("#{@space.name}.db")
+
       super(@port) rescue $stdout.puts $!
       log.info "---> SPACE SERVER STARTED"
 
@@ -23,7 +25,7 @@ module Vico
         $stdout.puts "===> SUBSPACE SERVER GOT EVENT FROM SUPERSPACE: #{event}"
       end
 
-      subspace_kind = space.class.name.downcase
+      subspace_kind = space.class.name.split('::').last.downcase
 
       @client.command("register #{subspace_kind} #{@space.name} localhost #{@port} 2 2")
     end

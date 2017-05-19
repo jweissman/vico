@@ -54,6 +54,7 @@ Client connects to WORLD SERVER, and is flying above the world. When landing, th
   - [x] Link cities to worlds
   - [x] Line-mode client
   - [x] Screen-mode client
+  - [x] Persist cities and worlds to database
   - [ ] Reclaim usable territory from the void
   - [ ] Manipulate landscape/terrain
   - [ ] Create entities
